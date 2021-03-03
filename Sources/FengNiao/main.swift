@@ -53,10 +53,17 @@ let projectPathOption = StringOption(
     helpMessage: "Root path of your Xcode project. Default is current folder.")
 cli.addOption(projectPathOption)
 
+let outputFileOption = StringOption(
+    shortFlag: "o", longFlag: "output",
+    helpMessage: "The folder where to save the output files. If does not exist, will create in project root folder, which default is current folder.")
+cli.addOption(outputFileOption)
+
+/*
 let isForceOption = BoolOption(
     longFlag: "force",
     helpMessage: "Delete the found unused files without asking.")
 cli.addOption(isForceOption)
+ */
 
 let excludePathOption = MultiStringOption(
     shortFlag: "e", longFlag: "exclude",
@@ -73,11 +80,13 @@ let fileExtOption = MultiStringOption(
     helpMessage: "In which types of files we should search for resource usage. Default is 'm mm swift xib storyboard plist'")
 cli.addOption(fileExtOption)
 
+/*
 let skipProjRefereceCleanOption = BoolOption(
     longFlag: "skip-proj-reference",
     helpMessage: "Skip the Project file (.pbxproj) reference cleaning. By skipping it, the project file will be left untouched. You may want to skip ths step if you are trying to build multiple projects with dependency and keep .pbxproj unchanged while compiling."
 )
 cli.addOption(skipProjRefereceCleanOption)
+ */
 
 let versionOption = BoolOption(longFlag: "version", helpMessage: "Print version.")
 cli.addOption(versionOption)
@@ -111,7 +120,11 @@ if versionOption.value {
 
 
 let projectPath = projectPathOption.value ?? "."
-let isForce = isForceOption.value
+guard let outputDir = outputFileOption.value else {
+    print("The output folder is require!".red.bold)
+    exit(EX_USAGE)
+}
+//let isForce = isForceOption.value
 let excludePaths = excludePathOption.value ?? []
 let resourceExtentions = resourceExtOption.value ?? ["imageset", "jpg", "png", "gif", "pdf"]
 let fileExtensions = fileExtOption.value ?? ["h", "m", "mm", "swift", "xib", "storyboard", "plist"]
@@ -144,6 +157,19 @@ if unusedFiles.isEmpty {
     exit(EX_OK)
 }
 
+let outputDirString = Path(outputDir).string
+
+print("正在将结果写入\(outputDirString) 请稍候...⚙".bold)
+
+if writeResultToOutput(files: unusedFiles, output: outputDir) {
+    print("😎 Hu, Unused resources are list in file: \(outputDirString).".green.bold)
+} else {
+    print("Emm... Write unused resources to file: \(outputDirString) FAIL.".red.bold)
+}
+
+print("😎 All Done. Bye!".green.bold)
+
+/*
 if !isForce {
     var result = promptResult(files: unusedFiles)
     while result == .list {
@@ -190,3 +216,4 @@ if !skipProjRefereceCleanOption.value {
         print("Unused Reference deleted successfully.".green.bold)
     }
 }
+ */
