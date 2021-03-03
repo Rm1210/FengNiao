@@ -53,11 +53,15 @@ let projectPathOption = StringOption(
     helpMessage: "Root path of your Xcode project. Default is current folder.")
 cli.addOption(projectPathOption)
 
-let outputFileOption = StringOption(
+let outputFolderOption = StringOption(
     shortFlag: "o", longFlag: "output",
     helpMessage: "The folder where to save the output files. If does not exist, will create in project root folder, which default is current folder.")
-cli.addOption(outputFileOption)
+cli.addOption(outputFolderOption)
 
+let isApartOption = BoolOption(
+    shortFlag: "a", longFlag: "apart",
+    helpMessage: "true：以 project 参数的一层子目录分隔输出结果。false：结果输出到 output参数下的 allUnusedResources.txt。")
+cli.addOption(isApartOption)
 /*
 let isForceOption = BoolOption(
     longFlag: "force",
@@ -120,10 +124,11 @@ if versionOption.value {
 
 
 let projectPath = projectPathOption.value ?? "."
-guard let outputDir = outputFileOption.value else {
-    print("The output folder is require!".red.bold)
+guard let outputDir = outputFolderOption.value else {
+    print("The output folder parameter is require!".red.bold)
     exit(EX_USAGE)
 }
+let isApart = isApartOption.value
 //let isForce = isForceOption.value
 let excludePaths = excludePathOption.value ?? []
 let resourceExtentions = resourceExtOption.value ?? ["imageset", "jpg", "png", "gif", "pdf"]
@@ -159,12 +164,13 @@ if unusedFiles.isEmpty {
 
 let outputDirString = Path(outputDir).string
 
-print("正在将结果写入\(outputDirString) 请稍候...⚙".bold)
+print("正在将结果写入 \(outputDirString) 请稍候...⚙".bold)
 
-if writeResultToOutput(files: unusedFiles, output: outputDir) {
-    print("😎 Hu, Unused resources are list in file: \(outputDirString).".green.bold)
+if writeResultToOutput(files: unusedFiles, output: outputDir, apart: isApart, relativePath: projectPath) {
+    print("😎 Hu, Unused resources are list in folder.: \(outputDirString).".green.bold)
 } else {
-    print("Emm... Write unused resources to file: \(outputDirString) FAIL.".red.bold)
+    print("Emm... Write unused resources to folder.: \(outputDirString) FAIL.".red.bold)
+    exit(EX_USAGE)
 }
 
 print("😎 All Done. Bye!".green.bold)
